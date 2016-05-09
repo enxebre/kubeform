@@ -49,101 +49,118 @@ resource "template_file" "etcd_discovery_url" {
   }
 }
 
-module "ca" {
-  source            = "github.com/Capgemini/tf_tls//ca"
-  organization      = "${var.organization}"
-  ca_count          = "${var.masters + var.workers}"
-  ip_addresses_list = "${concat(digitalocean_droplet.master.*.ipv4_address, digitalocean_droplet.worker.*.ipv4_address)}"
-  ssh_user          = "core"
-  ssh_private_key   = "${tls_private_key.ssh.private_key_pem}"
-}
+// module "ca" {
+//   source            = "github.com/Capgemini/tf_tls//ca"
+//   organization      = "${var.organization}"
+//   ca_count          = "${var.masters + var.workers}"
+//   deploy_ssh_hosts = "${concat(digitalocean_droplet.master.*.ipv4_address, digitalocean_droplet.worker.*.ipv4_address)}"
+//   ssh_user          = "core"
+//   ssh_private_key   = "${tls_private_key.ssh.private_key_pem}"
+// }
 
-module "etcd_cert" {
-  source             = "../certs/etcd"
-  ca_cert_pem        = "${module.ca.ca_cert_pem}"
-  ca_private_key_pem = "${module.ca.ca_private_key_pem}"
-}
+// module "etcd_cert" {
+//   source             = "../certs/etcd"
+//   ca_cert_pem        = "${module.ca.ca_cert_pem}"
+//   ca_private_key_pem = "${module.ca.ca_private_key_pem}"
+// }
 
-module "kube_apiserver_certs" {
-  source                = "github.com/Capgemini/tf_tls//kubernetes/apiserver"
-  ca_cert_pem           = "${module.ca.ca_cert_pem}"
-  ca_private_key_pem    = "${module.ca.ca_private_key_pem}"
-  ip_addresses          = "${compact(digitalocean_droplet.master.*.ipv4_address)}"
-  master_count          = "${var.masters}"
-  validity_period_hours = "8760"
-  early_renewal_hours   = "720"
-  ssh_user              = "core"
-  ssh_private_key       = "${tls_private_key.ssh.private_key_pem}"
-}
+// module "kube_apiserver_certs" {
+//   source                = "github.com/Capgemini/tf_tls//kubernetes/apiserver"
+//   ca_cert_pem           = "${module.ca.ca_cert_pem}"
+//   ca_private_key_pem    = "${module.ca.ca_private_key_pem}"
+//   ip_addresses          = "${compact(digitalocean_droplet.master.*.ipv4_address)}"
+//   deploy_ssh_hosts      = "${compact(digitalocean_droplet.master.*.ipv4_address)}"
+//   master_count          = "${var.masters}"
+//   validity_period_hours = "8760"
+//   early_renewal_hours   = "720"
+//   ssh_user              = "core"
+//   ssh_private_key       = "${tls_private_key.ssh.private_key_pem}"
+// }
 
-module "kube_worker_certs" {
-  source                = "github.com/Capgemini/tf_tls//kubernetes/worker"
-  ca_cert_pem           = "${module.ca.ca_cert_pem}"
-  ca_private_key_pem    = "${module.ca.ca_private_key_pem}"
-  ip_addresses          = "${compact(digitalocean_droplet.worker.*.ipv4_address)}"
-  worker_count          = "${var.workers}"
-  validity_period_hours = "8760"
-  early_renewal_hours   = "720"
-  ssh_user              = "core"
-  ssh_private_key       = "${tls_private_key.ssh.private_key_pem}"
-}
+// module "kube_worker_certs" {
+//   source                = "github.com/Capgemini/tf_tls//kubernetes/worker"
+//   ca_cert_pem           = "${module.ca.ca_cert_pem}"
+//   ca_private_key_pem    = "${module.ca.ca_private_key_pem}"
+//   ip_addresses          = "${compact(digitalocean_droplet.worker.*.ipv4_address)}"
+//   deploy_ssh_hosts      = "${compact(digitalocean_droplet.worker.*.ipv4_address)}"
+//   worker_count          = "${var.workers}"
+//   validity_period_hours = "8760"
+//   early_renewal_hours   = "720"
+//   ssh_user              = "core"
+//   ssh_private_key       = "${tls_private_key.ssh.private_key_pem}"
+// }
 
-module "kube_admin_cert" {
-  source                = "github.com/Capgemini/tf_tls/kubernetes/admin"
-  ca_cert_pem           = "${module.ca.ca_cert_pem}"
-  ca_private_key_pem    = "${module.ca.ca_private_key_pem}"
-  kubectl_server_ip     = "${digitalocean_droplet.master.0.ipv4_address}"
-}
+// module "kube_admin_cert" {
+//   source                = "github.com/Capgemini/tf_tls/kubernetes/admin"
+//   ca_cert_pem           = "${module.ca.ca_cert_pem}"
+//   ca_private_key_pem    = "${module.ca.ca_private_key_pem}"
+//   kubectl_server_ip     = "${digitalocean_droplet.master.0.ipv4_address}"
+// }
 
-module "docker_daemon_certs" {
-  source                = "github.com/Capgemini/tf_tls//docker/daemon"
-  ca_cert_pem           = "${module.ca.ca_cert_pem}"
-  ca_private_key_pem    = "${module.ca.ca_private_key_pem}"
-  ip_addresses_list     = "${concat(digitalocean_droplet.master.*.ipv4_address, digitalocean_droplet.worker.*.ipv4_address)}"
-  docker_daemon_count   = "${var.masters + var.workers}"
-  private_key           = "${tls_private_key.ssh.private_key_pem}"
-  validity_period_hours = 8760
-  early_renewal_hours   = 720
-  user                  = "core"
-}
+// module "docker_daemon_certs" {
+//   source                = "github.com/Capgemini/tf_tls//docker/daemon"
+//   ca_cert_pem           = "${module.ca.ca_cert_pem}"
+//   ca_private_key_pem    = "${module.ca.ca_private_key_pem}"
+//   ip_addresses_list     = "${concat(digitalocean_droplet.master.*.ipv4_address, digitalocean_droplet.worker.*.ipv4_address)}"
+//   deploy_ssh_hosts      = "${concat(digitalocean_droplet.master.*.ipv4_address, digitalocean_droplet.worker.*.ipv4_address)}"
+//   docker_daemon_count   = "${var.masters + var.workers}"
+//   private_key           = "${tls_private_key.ssh.private_key_pem}"
+//   validity_period_hours = 8760
+//   early_renewal_hours   = 720
+//   user                  = "core"
+// }
 
-module "docker_client_certs" {
-  source                = "github.com/Capgemini/tf_tls//docker/client"
-  ca_cert_pem           = "${module.ca.ca_cert_pem}"
-  ca_private_key_pem    = "${module.ca.ca_private_key_pem}"
-  ip_addresses_list     = "${concat(digitalocean_droplet.master.*.ipv4_address, digitalocean_droplet.worker.*.ipv4_address)}"
-  docker_client_count   = "${var.masters + var.workers}"
-  private_key           = "${tls_private_key.ssh.private_key_pem}"
-  validity_period_hours = 8760
-  early_renewal_hours   = 720
-  user                  = "core"
-}
+// module "docker_client_certs" {
+//   source                = "github.com/Capgemini/tf_tls//docker/client"
+//   ca_cert_pem           = "${module.ca.ca_cert_pem}"
+//   ca_private_key_pem    = "${module.ca.ca_private_key_pem}"
+//   ip_addresses_list     = "${concat(digitalocean_droplet.master.*.ipv4_address, digitalocean_droplet.worker.*.ipv4_address)}"
+//   deploy_ssh_hosts      = "${concat(digitalocean_droplet.master.*.ipv4_address, digitalocean_droplet.worker.*.ipv4_address)}"
+//   docker_client_count   = "${var.masters + var.workers}"
+//   private_key           = "${tls_private_key.ssh.private_key_pem}"
+//   validity_period_hours = 8760
+//   early_renewal_hours   = 720
+//   user                  = "core"
+// }
 
-resource "template_file" "master_cloud_init" {
-  template   = "master-cloud-config.yml.tpl"
-  depends_on = ["template_file.etcd_discovery_url"]
-  vars {
-    etcd_discovery_url = "${file(var.etcd_discovery_url_file)}"
-    size               = "${var.masters}"
-    region             = "${var.region}"
-    etcd_ca            = "${replace(module.ca.ca_cert_pem, \"\n\", \"\\n\")}"
-    etcd_cert          = "${replace(module.etcd_cert.etcd_cert_pem, \"\n\", \"\\n\")}"
-    etcd_key           = "${replace(module.etcd_cert.etcd_private_key, \"\n\", \"\\n\")}"
-  }
-}
+// module "docker_client_certs" {
+//   source                = "github.com/Capgemini/tf_tls/docker/client"
+//   ca_cert_pem           = "${module.ca.ca_cert_pem}"
+//   ca_private_key_pem    = "${module.ca.ca_private_key_pem}"
+//   ip_addresses_list     = "${concat(aws_instance.master.*.private_ip, aws_instance.worker.*.private_ip)}"
+//   deploy_ssh_hosts      = "${concat(aws_instance.master.*.public_ip, aws_instance.worker.*.public_ip)}"
+//   docker_client_count   = "${var.masters + var.workers}"
+//   private_key           = "${tls_private_key.ssh.private_key_pem}"
+//   validity_period_hours = 8760
+//   early_renewal_hours   = 720
+//   user                  = "core"
+// }
 
-resource "template_file" "worker_cloud_init" {
-  template   = "worker-cloud-config.yml.tpl"
-  depends_on = ["template_file.etcd_discovery_url"]
-  vars {
-    etcd_discovery_url = "${file(var.etcd_discovery_url_file)}"
-    size               = "${var.masters}"
-    region             = "${var.region}"
-    etcd_ca            = "${replace(module.ca.ca_cert_pem, \"\n\", \"\\n\")}"
-    etcd_cert          = "${replace(module.etcd_cert.etcd_cert_pem, \"\n\", \"\\n\")}"
-    etcd_key           = "${replace(module.etcd_cert.etcd_private_key, \"\n\", \"\\n\")}"
-  }
-}
+// resource "template_file" "master_cloud_init" {
+//   template   = "master-cloud-config.yml.tpl"
+//   depends_on = ["template_file.etcd_discovery_url"]
+//   vars {
+//     etcd_discovery_url = "${file(var.etcd_discovery_url_file)}"
+//     size               = "${var.masters}"
+//     region             = "${var.region}"
+//     etcd_ca            = "${replace(module.ca.ca_cert_pem, \"\n\", \"\\n\")}"
+//     etcd_cert          = "${replace(module.etcd_cert.etcd_cert_pem, \"\n\", \"\\n\")}"
+//     etcd_key           = "${replace(module.etcd_cert.etcd_private_key, \"\n\", \"\\n\")}"
+//   }
+// }
+
+// resource "template_file" "worker_cloud_init" {
+//   template   = "worker-cloud-config.yml.tpl"
+//   depends_on = ["template_file.etcd_discovery_url"]
+//   vars {
+//     etcd_discovery_url = "${file(var.etcd_discovery_url_file)}"
+//     size               = "${var.masters}"
+//     region             = "${var.region}"
+//     etcd_ca            = "${replace(module.ca.ca_cert_pem, \"\n\", \"\\n\")}"
+//     etcd_cert          = "${replace(module.etcd_cert.etcd_cert_pem, \"\n\", \"\\n\")}"
+//     etcd_key           = "${replace(module.etcd_cert.etcd_private_key, \"\n\", \"\\n\")}"
+//   }
+// }
 
 # Masters
 resource "digitalocean_droplet" "master" {
@@ -153,7 +170,7 @@ resource "digitalocean_droplet" "master" {
   name               = "kube-master-${count.index}"
   size               = "${var.master_instance_type}"
   private_networking = true
-  user_data          = "${template_file.master_cloud_init.rendered}"
+  // user_data          = "${template_file.master_cloud_init.rendered}"
   ssh_keys = [
     "${digitalocean_ssh_key.default.id}"
   ]
@@ -187,7 +204,7 @@ resource "digitalocean_droplet" "worker" {
   name               = "kube-worker-${count.index}"
   size               = "${var.worker_instance_type}"
   private_networking = true
-  user_data          = "${template_file.worker_cloud_init.rendered}"
+//  user_data          = "${template_file.worker_cloud_init.rendered}"
   ssh_keys = [
     "${digitalocean_ssh_key.default.id}"
   ]
